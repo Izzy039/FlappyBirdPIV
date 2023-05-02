@@ -1,14 +1,20 @@
-class GameScene extends Phaser.Scene{
-    constructor(config){
-        console.log("This is a game scene");
+import Bird from "../features/bird";
+import PipeSystem from "../features/pipes";
+import Score from "../features/score";
+
+export default class GameScene extends Phaser.Scene{
+    constructor(config) {
         super(config);
         this.config = config;
         this.bird = null;
         this.pipes = null;
-        this.elapsed = null;
+        this.score = null;
+        this.layers = {
+          background: null,
+          game: null,
+          ui: null
+        }
     }
-
-
     
     preload(){
         this.load.image("sky", "assets/sky.png")
@@ -17,52 +23,35 @@ class GameScene extends Phaser.Scene{
       }
 
     create(){
+        this.layers.background = this.add.layer();
+        this.layers.game = this.add.layer();
+        this.layers.ui = this.add.layer();
         //Ajusta imagen a tamaño de pantalla
-        //this.add.image(config.width /2, config.height / 2, "sky");
         //Cambia el pivote
-        this.add.image(0, 0, "sky").setOrigin(0);
-      
-        this.bird = this.add.sprite(100, config.height / 2, "bird");
-        this.physics.add.existing(bird);
+        const sky = this.add.image(0, 0, "sky").setOrigin(0);
+        this.layers.background.add(sky);
+        this.bird = new Bird(this, 100, this.config.height / 2, "bird");
+        this.layers.game.add(this.bird);
+        this.pipes = new PipeSystem(this, this.layers.game);
       
         //añadir "body" le da un Rigid Body al objeto, para poder asignarle valores de velocidad y gravedad
-        this.bird.body.velocity.x = 30;
-        //bird.body.gravity.y= 100;
-        this.input.keyboard.on("keydown-SPACE", flap);
-        setTimeout(spawnPipe(this), 1000);
-        this.pipes = game.physics.add.group({
-          allowGravity: false,
-          inmovable: true
-        });
-        this.physics.add.collider(bird, pipes, gameOver, null, this);
+        this.bird.body.velocity.x = 10;        
+        this.physics.add.collider(this.bird, this.pipes.group, this.gameOver, null, this);
         //Limita el movimiento al canvas
         this.bird.body.setCollideWorldBounds(true);
+        this.score = new Score(this, 16, 16, this.layers.ui);
+
+        this.pipes.onPipeExit = ()=>{
+          this.score.addScore(1);
+        }
+
+        this.pipes.start();
         
     }
 
     update(time, delta){
-        elapsed += delta;
-        if(elapsed >= pipeSpawnTime){
-          spawnPipe();
-          elapsed = 0;
-        }
-        console.log(Math.random() * 117 + 117); //función para aleatorio
-        
+        this.pipes.update();
       }
-
-    flap(){
-        this.bird.body.velocity.y = -flapVelocity;
-    }
-
-    spawnPipe(){
-        var yPos= Phaser.Math.Between(50, 350);
-        var gap = Phaser.Math.Between(100, 200);
-        var upper = this.pipes.add.sprite(config.width, yPos, "pipe").setOrigin(0, 1);
-        var lower = this.pipes.add.sprite(config.width, yPos, + gap, "pipe").setOrigin(0);
-      
-        upper.body.velocity.x = -150;
-        lower.body.velocity.x = -150;
-    } 
 
     gameOver(){
         alert("You lose");
@@ -70,5 +59,3 @@ class GameScene extends Phaser.Scene{
         this.scene.restart();
       }
 }
-
-export default GameScene
