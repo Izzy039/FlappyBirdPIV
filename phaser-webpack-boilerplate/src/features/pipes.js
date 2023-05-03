@@ -4,8 +4,9 @@ const DEFAULT_PIPE_SPAWN_POSITION_RANGE = [50, 350];
 const DEFAULT_PIPE_GAP_SIZE_RANGE = [50, 400];
 
 export default class PipeSystem {
-constructor(scene){
+constructor(scene, layer){
     this.scene = scene;
+    this.layer = layer;
     this.group = scene.physics.add.group({
         allowGravity: false,
         inmovable: true
@@ -14,17 +15,39 @@ constructor(scene){
     this.pipes = [];
     this.pool = [];
     this.onPipeExit = ()=>{};
+    this.stopped = false;
+    this.spawmTimer = null;
     }
 
     start(){
         this.spawnPipe();
-        this.scene.time.addEvent({
+        this.spawnTimer = this.scene.time.addEvent({
             delay: PIPE_SPAWN_TIME,
             callback: ()=> {
                 this.spawnPipe();
         },
         loop: true
         })
+    }
+
+    stop() {
+        this.stopped = true;
+        this.spawnTimer.remove();
+        this.pipes.forEach(pipe => {
+            pipe.setVelocity(0);
+        });
+    }
+
+    pause() {
+        if (this.spawnTimer) {
+            this.spawnTimer.paused = true;
+        }
+    }
+
+    resume() {
+        if(this.spawnTimer) {
+            this.spawnTimer.paused = false;
+        }
     }
 
     update (){
@@ -45,7 +68,7 @@ constructor(scene){
             pipe.resetPosition();
         }
         else{
-        pipe = new Pipe (this.group, this.scene.config.width);
+        pipe = new Pipe (this.group, this.scene.config.width, this.layer);
         }
         pipe.setVelocity(PIPE_VELOCITY);
         pipe.setVisible(true);
@@ -62,7 +85,7 @@ constructor(scene){
 }
 
 class Pipe {
-    constructor(group, spawnX){
+    constructor(group, spawnX, layer){
         this.group = group;
         this.spawnX = spawnX;
         this.pipeSpawnPositionRange = DEFAULT_PIPE_SPAWN_POSITION_RANGE;

@@ -1,6 +1,7 @@
 
 import Phaser, { Scenes } from "phaser";
 import GameScene from "./scenes/game-scene";
+import MenuScene from "./scenes/menu-scene";
 
 const GLOBAL_CONFIG = {
   width: 800,
@@ -17,7 +18,9 @@ const config = {
       gravity: {y: 450}
     }
   },
-  scene: [new GameScene(GLOBAL_CONFIG)]
+  scene: [
+    new MenuScene(GLOBAL_CONFIG),
+    new GameScene(GLOBAL_CONFIG)]
 }
 
 new Phaser.Game(config);
